@@ -2,6 +2,7 @@ package de.mrtroble;
 
 import de.mrtroble.assets.Assets;
 import javafx.application.Application;
+import javafx.event.*;
 import javafx.geometry.Pos;
 import javafx.scene.*;
 import javafx.scene.layout.*;
@@ -41,6 +42,15 @@ public class MainAWP extends Application{
 		pane.add(pw, 0,3);
 		
 		MButton con = new MButton("Connect"); 
+		con.setOnAction(new EventHandler<ActionEvent>() {
+			
+			@Override
+			public void handle(ActionEvent event) {
+				if(!username.getText().isEmpty() && !url.getText().isEmpty() && !pw.getText().isEmpty()){
+					initConnectionPhase(st, sc);
+				}
+			}
+		});
 		pane.add(con, 0,4);
 		
 		StackPane pns = new StackPane(pane);
@@ -53,4 +63,10 @@ public class MainAWP extends Application{
 		st.show();
 	}
 	
+	private static void initConnectionPhase(Stage st,Scene sc){
+		root.getChildren().clear();
+		Scene s = new Scene(root,sc.getWidth(),sc.getHeight());
+		s.setFill(Color.DARKGRAY);
+		st.setScene(s);
+	}
 }
