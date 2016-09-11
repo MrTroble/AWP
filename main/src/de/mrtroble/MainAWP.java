@@ -2,20 +2,18 @@ package de.mrtroble;
 
 import java.io.*;
 import java.net.*;
-import java.sql.*;
 import java.util.*;
 import java.util.function.BiConsumer;
-
-import javax.crypto.SealedObject;
-import javax.swing.JButton;
 
 import de.mrtroble.assets.Assets;
 import javafx.application.*;
 import javafx.event.*;
-import javafx.geometry.Pos;
+import javafx.geometry.*;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
+import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -53,6 +51,15 @@ public class MainAWP extends Application{
 	@Override
 	public void start(Stage st) throws Exception {
 		Scene sc = new Scene(root,1200,800);
+		sc.setOnKeyPressed(new EventHandler<KeyEvent>() {
+
+			@Override
+			public void handle(KeyEvent event) {
+				if(event.getCode().equals(KeyCode.ESCAPE)){
+					System.exit(0);
+				}
+			}
+		});
 		st.setScene(sc);
 		st.initStyle(StageStyle.UNDECORATED);
 				
@@ -108,7 +115,7 @@ public class MainAWP extends Application{
 	public static HashMap<String,ArrayList<Value>> tabels = new HashMap<String,ArrayList<Value>>();
 	public static int igt = 0;
 
-	private static void initConnectionPhase(Stage st,Scene sc,String url,String name,String pw){
+	private void initConnectionPhase(Stage st,Scene sc,String url,String name,String pw){
 		OPTIONS.delete();
 		try {
 			OPTIONS.createNewFile();
@@ -122,6 +129,15 @@ public class MainAWP extends Application{
 		sc.setRoot(new Group());
 		root.getChildren().clear();
 		Scene s = new Scene(root,sc.getWidth(),sc.getHeight());
+		s.setOnKeyPressed(new EventHandler<KeyEvent>() {
+
+			@Override
+			public void handle(KeyEvent event) {
+				if(event.getCode().equals(KeyCode.ESCAPE)){
+					System.exit(0);
+				}
+			}
+		});
 		s.setFill(Color.DARKGRAY);
 		st.setScene(s);
 		
@@ -133,9 +149,14 @@ public class MainAWP extends Application{
 		GridPane pn = new GridPane();
 		pn.setHgap(15);
 		pn.setVgap(15);
-		
+		pn.setAlignment(Pos.TOP_CENTER);
+		pn.setPrefSize(500, 500);
+				
 		ScrollPane scr = new ScrollPane(pn);
+		scr.setStyle("-fx-background-color: darkgray;");
+		scr.setHbarPolicy(ScrollBarPolicy.NEVER);
 		scr.setPrefSize(500, 500);
+		scr.setMaxSize(scr.getPrefWidth(), scr.getPrefHeight());
 		std.getChildren().add(scr);
 		
 		AsyncMysql cn = connectToServices(url,name,pw);
@@ -217,20 +238,50 @@ public class MainAWP extends Application{
 	}
 	private static int ic = 0;
 	private static void dialog(String nam,ArrayList<Value> val,Scene sc){
-		Stage st = new Stage(StageStyle.UTILITY);
+		Stage st = new Stage(StageStyle.UNDECORATED);
 		st.setResizable(false);
 		StackPane pn = new StackPane();
-		pn.setAlignment(Pos.BOTTOM_CENTER);
+		pn.setAlignment(Pos.TOP_CENTER);
 		pn.setPrefSize(sc.getWidth(), sc.getHeight());
 		Scene sce = new Scene(pn,sc.getWidth(),sc.getHeight());
 		st.setScene(sce);
+		
+		sce.setOnKeyPressed(new EventHandler<KeyEvent>() {
+
+			@Override
+			public void handle(KeyEvent event) {
+				if(event.getCode().equals(KeyCode.ESCAPE)){
+					st.close();
+				}
+			}
+		});
 		
 		GridPane gpn = new GridPane();
 		gpn.setHgap(15);
 		gpn.setVgap(15);
 		
+		GridPane list = new GridPane();
+		list.setHgap(15);
+		list.setVgap(15);
+		
+		ScrollPane lisP = new ScrollPane(list);
+		lisP.setBorder(Border.EMPTY);
+		lisP.setMaxWidth(900);
+		lisP.setMinWidth(900);
+		lisP.setVbarPolicy(ScrollBarPolicy.NEVER);
+		
+		GridPane co = new GridPane();
+		co.setHgap(15);
+		co.setVgap(15);
+		co.setMaxWidth(100);
+		
+		gpn.add(lisP, 0, 0);
+		gpn.add(co, 1, 0);
+		
 		ScrollPane scro = new ScrollPane(gpn);
-		scro.setPrefSize(200, 800);
+		scro.setPrefSize(1000, 800);
+		scro.setMaxSize(scro.getPrefWidth(), scro.getPrefHeight());
+		scro.setHbarPolicy(ScrollBarPolicy.NEVER);
 		ic = 0;
 		new Thread(new Runnable() {
 			
@@ -243,8 +294,25 @@ public class MainAWP extends Application{
 					
 					@Override
 					public void run() {
-						gpn.add(new MLabel(vls.name), 0, ic);
-						gpn.add(new MLabel("" + vls.getCount()), 1, ic);
+						EventHandler<MouseEvent> evt = new EventHandler<MouseEvent>() {
+							
+							@Override
+							public void handle(MouseEvent event) {
+								if(event.getButton().equals(MouseButton.PRIMARY)){
+									Alert al = new Alert(AlertType.INFORMATION);
+									al.setTitle("Value view");
+									al.setHeaderText(vls.name.replace(";", "\n"));
+									al.setContentText("Found " + vls.getCount() + " times in data");
+									al.showAndWait();
+								}
+							}
+						};
+						MLabel lab = new MLabel(vls.name);
+						lab.setOnMouseClicked(evt);
+						MLabel cont = new MLabel("" + vls.getCount());
+						cont.setOnMouseClicked(evt);
+						list.add(lab, 0, ic);
+						co.add(cont, 0, ic);
 						ic++;
 					}
 				});
