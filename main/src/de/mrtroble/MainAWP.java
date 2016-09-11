@@ -3,14 +3,18 @@ package de.mrtroble;
 import java.io.*;
 import java.net.*;
 import java.sql.*;
-import java.util.Scanner;
+import java.util.*;
+import java.util.function.BiConsumer;
+
+import javax.crypto.SealedObject;
+import javax.swing.JButton;
 
 import de.mrtroble.assets.Assets;
-import javafx.application.Application;
+import javafx.application.*;
 import javafx.event.*;
 import javafx.geometry.Pos;
 import javafx.scene.*;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -101,6 +105,9 @@ public class MainAWP extends Application{
 		st.show();
 	}
 	
+	public static HashMap<String,ArrayList<Value>> tabels = new HashMap<String,ArrayList<Value>>();
+	public static int igt = 0;
+
 	private static void initConnectionPhase(Stage st,Scene sc,String url,String name,String pw){
 		OPTIONS.delete();
 		try {
@@ -112,27 +119,149 @@ public class MainAWP extends Application{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		Connection cn = connectToServices(url,name,pw);
 		sc.setRoot(new Group());
 		root.getChildren().clear();
 		Scene s = new Scene(root,sc.getWidth(),sc.getHeight());
 		s.setFill(Color.DARKGRAY);
 		st.setScene(s);
+		
+		StackPane std = new StackPane();
+		std.setAlignment(Pos.CENTER);
+		std.setBackground(BackgroundUtil.getColered(Color.DARKGRAY, 0, 0));
+		std.setPrefSize(sc.getWidth(), sc.getHeight());
+		
+		GridPane pn = new GridPane();
+		pn.setHgap(15);
+		pn.setVgap(15);
+		
+		ScrollPane scr = new ScrollPane(pn);
+		scr.setPrefSize(500, 500);
+		std.getChildren().add(scr);
+		
+		AsyncMysql cn = connectToServices(url,name,pw);
+		cn.query("SELECT * FROM data;", rs -> {
+			try {
+				while (rs.next()) {
+					String[] str = rs.getString("data").split("\n");
+				    for(String stri : str){
+					if(!stri.contains("=>"))continue;
+					String[] sr = stri.split("=>");
+					String nam = sr[0].replace("[", "/~").split("/~")[1].replace("]", "~/").split("~/")[0];
+					String val = sr[1];
+					if(val.startsWith(" ")){
+							val = val.replaceFirst(" ", "").replace("	", "").replace("\n", "");
+					}
+					while(val.endsWith(" ")){
+							val = val.substring(0, val.length() - 1);
+					}
+					ArrayList<Value> tab;
+					if(!tabels.containsKey(nam)){
+							tabels.put(nam, new ArrayList<Value>());
+					}
+					tab = tabels.get(nam);
+					Iterator<Value> itar = tab.iterator();
+					boolean b = false;
+					while(itar.hasNext()){
+							Value vl = itar.next();
+							if(vl.name.equals(val)){
+								vl.setCount(vl.getCount() + 1);
+							    b = true;
+								break;
+							}
+					}
+					if(!b){
+						   tab.add(new Value(val));
+					}
+					}
+				}
+				tabels.forEach(new BiConsumer<String, ArrayList<Value>>() {
+
+					@Override
+					public void accept(String t, ArrayList<Value> u) {
+						u.sort(new Comparator<Value>() {
+
+							@Override
+							public int compare(Value v1, Value v2) {
+								if(v1.getCount() > v2.getCount())return -1;
+								if(v1.getCount() < v2.getCount())return 1;
+								return 0;
+							}
+						});
+						Platform.runLater(new Runnable() {
+							
+							public void run() {
+								MButton btn = new MButton(t);
+								btn.setOnAction(new EventHandler<ActionEvent>() {
+									
+									@Override
+									public void handle(ActionEvent event) {
+										dialog(t, u,sc);
+									}
+								});
+								pn.add(btn, 0, igt);
+								igt++;
+						    }
+						});
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+			});
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});		  
+		root.getChildren().add(std);
+	}
+	private static int ic = 0;
+	private static void dialog(String nam,ArrayList<Value> val,Scene sc){
+		Stage st = new Stage(StageStyle.UTILITY);
+		st.setResizable(false);
+		StackPane pn = new StackPane();
+		pn.setAlignment(Pos.BOTTOM_CENTER);
+		pn.setPrefSize(sc.getWidth(), sc.getHeight());
+		Scene sce = new Scene(pn,sc.getWidth(),sc.getHeight());
+		st.setScene(sce);
+		
+		GridPane gpn = new GridPane();
+		gpn.setHgap(15);
+		gpn.setVgap(15);
+		
+		ScrollPane scro = new ScrollPane(gpn);
+		scro.setPrefSize(200, 800);
+		ic = 0;
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				Iterator<Value> vl = val.iterator();
+				while(vl.hasNext()){
+					Value vls = vl.next();
+				Platform.runLater(new Runnable() {
+					
+					@Override
+					public void run() {
+						gpn.add(new MLabel(vls.name), 0, ic);
+						gpn.add(new MLabel("" + vls.getCount()), 1, ic);
+						ic++;
+					}
+				});
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				}
+			}
+		}).start();
+		
+		pn.getChildren().add(scro);
+		st.show();
 	}
 	
-	private static Connection connectToServices(String url, String name, String pw) {	 
-		Connection con = null;
-		System.out.println(url);
-	    AsyncMysql mysql = new AsyncMysql(url, 3306, "analytics", pw, name);
-		mysql.query("SELECT * FROM data WHERE uuid=\"b12598d5-c8ac-4a3d-a301-7ab7b4754864\";", rs -> {
-				System.out.println("---");
-				try {
-					while (rs.next()) {
-						System.out.println(rs.getString("data"));
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}});		  
-           return con;
+	private static AsyncMysql connectToServices(String url, String name, String pw) {	 
+		 return new AsyncMysql(url, 3306, "analytics", pw, name);
 	}
 }
