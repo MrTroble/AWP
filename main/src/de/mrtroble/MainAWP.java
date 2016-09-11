@@ -68,7 +68,7 @@ public class MainAWP extends Application{
 		pane.setHgap(15);
 		pane.setVgap(15);
 		
-		pane.add(new MLabel("Datenbank"), 0, 0);
+		pane.add(new MLabel("Database"), 0, 0);
 		
 		MTextField url = new MTextField("URL");
 		url.setText(arg[0]);
@@ -101,6 +101,7 @@ public class MainAWP extends Application{
 			}
 		});
 		pane.add(con, 0,4);
+		pane.add(new MLabel("ESC to close or back\nClick on a value to view"), 0, 5);
 		
 		StackPane pns = new StackPane(pane);
 		pns.setAlignment(Pos.CENTER);
@@ -129,6 +130,7 @@ public class MainAWP extends Application{
 		sc.setRoot(new Group());
 		root.getChildren().clear();
 		Scene s = new Scene(root,sc.getWidth(),sc.getHeight());
+		s.getStylesheets().add(Assets.getResource("main.css").toExternalForm());
 		s.setOnKeyPressed(new EventHandler<KeyEvent>() {
 
 			@Override
@@ -148,12 +150,12 @@ public class MainAWP extends Application{
 		
 		GridPane pn = new GridPane();
 		pn.setHgap(15);
+		pn.setBackground(BackgroundUtil.getColered(Color.DARKGRAY, 0, 0));
 		pn.setVgap(15);
 		pn.setAlignment(Pos.TOP_CENTER);
 		pn.setPrefSize(500, 500);
 				
 		ScrollPane scr = new ScrollPane(pn);
-		scr.setStyle("-fx-background-color: darkgray;");
 		scr.setHbarPolicy(ScrollBarPolicy.NEVER);
 		scr.setPrefSize(500, 500);
 		scr.setMaxSize(scr.getPrefWidth(), scr.getPrefHeight());
@@ -268,25 +270,24 @@ public class MainAWP extends Application{
 		ScrollPane scro = new ScrollPane(gpn);
 		
 		ScrollPane lisP = new ScrollPane(list);
-		lisP.setStyle("-fx-border-radius: 0;");
-		lisP.setMaxWidth(900);
-		lisP.setMinWidth(900);
+		lisP.setMaxWidth(1000);
+		lisP.setMinWidth(1000);
 		lisP.setVbarPolicy(ScrollBarPolicy.NEVER);
 		
 		GridPane co = new GridPane();
 		co.setHgap(15);
 		co.setVgap(15);
-		co.setMaxWidth(100);
+		co.setMaxWidth(200);
 		
 		gpn.add(lisP, 0, 0);
 		gpn.add(co, 1, 0);
 		
-		scro.setPrefSize(1000, 800);
+		scro.setPrefSize(1200, 800);
 		scro.setMaxSize(scro.getPrefWidth(), scro.getPrefHeight());
 		scro.setHbarPolicy(ScrollBarPolicy.NEVER);
 		ic = 0;
 		list.add(new MLabel("Value"), 0, 0);
-		co.add(new MLabel("Value"), 0, 0);
+		co.add(new MLabel("Count"), 0, 0);
 		ic++;
 		new Thread(new Runnable() {
 			
@@ -306,6 +307,7 @@ public class MainAWP extends Application{
 								if(event.getButton().equals(MouseButton.PRIMARY)){
 									Alert al = new Alert(AlertType.INFORMATION);
 									al.setTitle("Value view");
+									al.initStyle(StageStyle.UNDECORATED);
 									al.setHeaderText(vls.name.replace(";", "\n"));
 									al.setContentText("Found " + vls.getCount() + " times in data");
 									al.showAndWait();
