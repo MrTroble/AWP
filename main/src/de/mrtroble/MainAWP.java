@@ -244,6 +244,7 @@ public class MainAWP extends Application{
 		pn.setAlignment(Pos.TOP_CENTER);
 		pn.setPrefSize(sc.getWidth(), sc.getHeight());
 		Scene sce = new Scene(pn,sc.getWidth(),sc.getHeight());
+		sce.getStylesheets().add(Assets.getResource("main.css").toExternalForm());
 		st.setScene(sce);
 		
 		sce.setOnKeyPressed(new EventHandler<KeyEvent>() {
@@ -264,8 +265,10 @@ public class MainAWP extends Application{
 		list.setHgap(15);
 		list.setVgap(15);
 		
+		ScrollPane scro = new ScrollPane(gpn);
+		
 		ScrollPane lisP = new ScrollPane(list);
-		lisP.setBorder(Border.EMPTY);
+		lisP.setStyle("-fx-border-radius: 0;");
 		lisP.setMaxWidth(900);
 		lisP.setMinWidth(900);
 		lisP.setVbarPolicy(ScrollBarPolicy.NEVER);
@@ -278,11 +281,13 @@ public class MainAWP extends Application{
 		gpn.add(lisP, 0, 0);
 		gpn.add(co, 1, 0);
 		
-		ScrollPane scro = new ScrollPane(gpn);
 		scro.setPrefSize(1000, 800);
 		scro.setMaxSize(scro.getPrefWidth(), scro.getPrefHeight());
 		scro.setHbarPolicy(ScrollBarPolicy.NEVER);
 		ic = 0;
+		list.add(new MLabel("Value"), 0, 0);
+		co.add(new MLabel("Value"), 0, 0);
+		ic++;
 		new Thread(new Runnable() {
 			
 			@Override
